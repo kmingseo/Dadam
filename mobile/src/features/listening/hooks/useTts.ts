@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getWordTts } from "../api/listeningApi";
+import { getWordTts } from "../api/cardSelectApi";
 import Sound from "react-native-sound";
 import RNFS from "react-native-fs";
 

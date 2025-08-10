@@ -13,3 +13,8 @@ export interface Card {
   body : string;
   imageUrl : string;
 }
+
+export interface Dictation {
+  problemSetId : string;
+  problemIndex : number;
+}

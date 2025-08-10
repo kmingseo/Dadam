@@ -11,7 +11,7 @@ type CardSelectProbRouteProp = RouteProp<ListeningStackParamList, 'CardSelectPro
 
 export default function CardSelectProbScreen() {
     const navigation = useListeningNavigation();
-    const route = useRoute<CardSelectProbRouteProp>();
+    const route = useRoute<CardSelectProbRouteProp>(); 
     const {submit, getCardProb, loading, error} = useCardProb(); 
     const {getVoice, deleteTtsFile} = useTts();
     const {problemSetId} = route.params;

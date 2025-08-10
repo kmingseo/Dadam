@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { checkAnswer, getProblem, getProblemSetId, getWordTts } from "../api/listeningApi";
+import { checkAnswer, getProblem, getProblemSetId, getWordTts } from "../api/cardSelectApi";
 import { CardProblem, CardSelectRequest } from "../types";
 
 export function useCardProb(){
