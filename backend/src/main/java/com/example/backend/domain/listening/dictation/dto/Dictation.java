@@ -10,5 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Dictation {
-    private String text;
+    private int sentenceId;
+    private String body;
 }

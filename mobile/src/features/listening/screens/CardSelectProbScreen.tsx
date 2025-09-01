@@ -49,8 +49,7 @@ export default function CardSelectProbScreen() {
 
     const handleNext = async () => {
         if(answerIndex !== -1){
-            const text = cards[answerIndex].body;
-            await deleteTtsFile(text);
+            await deleteTtsFile(cards[answerIndex]);
         }
         if(problemIndex >= 4) {
             navigation.reset({
@@ -63,8 +62,7 @@ export default function CardSelectProbScreen() {
 
     const handleVoice = async () => {
         if(answerIndex !== -1) {
-            const text = cards[answerIndex].body;
-            getVoice(text);
+            getVoice(cards[answerIndex]);
         }
     }
     

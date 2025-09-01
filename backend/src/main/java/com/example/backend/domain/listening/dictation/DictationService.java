@@ -1,6 +1,7 @@
 package com.example.backend.domain.listening.dictation;
 
 import com.example.backend.domain.listening.dictation.dto.Dictation;
+import com.example.backend.domain.sentence.Sentence;
 import com.example.backend.domain.sentence.SentenceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -10,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -27,8 +29,12 @@ public class DictationService {
 
     //문제 만들기
     public List<Dictation> createProblems() {
-        List<String> bodies= sentenceRepository.findRandomSentenceBodies(5);
-        return bodies.stream().map(Dictation::new).collect(Collectors.toList());
+        List<Sentence> sentences= sentenceRepository.findRandomSentenceBodies(5);
+
+        return sentences.stream()
+                .map(s -> new Dictation(s.getId(), s.getBody()))
+                .collect(Collectors.toList());
+
     }
 
     //하나로 묶어서 반환

@@ -20,8 +20,3 @@ export async function getProblem({ problemSetId, problemIndex}: Dictation){
     });
     return response.data;
 }
-
-export async function getSentenceTts(text:string) {
-    const response = await api.post('api/tts',{text});
-    return response.data;
-}

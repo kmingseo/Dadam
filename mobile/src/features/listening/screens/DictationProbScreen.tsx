@@ -23,7 +23,7 @@ export default function DictationProbScreen () {
         const loadProblem = async () => {
             setIsSubmitted(false);
             const prob = await getDictaionProb({problemSetId, problemIndex});
-            setSentence(prob);
+            setSentence(prob.body);
         }
         loadProblem();
     },[problemIndex])
