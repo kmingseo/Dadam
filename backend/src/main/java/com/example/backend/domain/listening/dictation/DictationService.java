@@ -1,6 +1,7 @@
 package com.example.backend.domain.listening.dictation;
 
 import com.example.backend.domain.listening.dictation.dto.Dictation;
+import com.example.backend.domain.listening.dictation.dto.DictationRequest;
 import com.example.backend.domain.sentence.Sentence;
 import com.example.backend.domain.sentence.SentenceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -65,6 +66,27 @@ public class DictationService {
             return dictations.get(problemIndex);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JSON 파싱 실패", e);
+        }
+    }
+
+    public boolean checkAnswer (DictationRequest dictationRequest) {
+        try{
+            String json = redisTemplate.opsForValue().get(dictationRequest.getProblemSetId());
+            if(json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다.");
+
+            List<Dictation> dictations = objectMapper.readValue(json,new TypeReference<List<Dictation>>() {});
+            int index = dictationRequest.getProblemIndex();
+
+            if(index < 0 || index >= dictations.size()) throw new IllegalArgumentException("유효하지 않은 문제 인덱스입니다.");
+
+            Dictation dictation =  dictations.get(index);
+
+            String answer = dictation.getBody();
+            String userAnswer = dictationRequest.getUserAnswer();
+
+            return answer.equals(userAnswer);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 

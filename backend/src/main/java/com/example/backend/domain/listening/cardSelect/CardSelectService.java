@@ -77,7 +77,7 @@ public class CardSelectService {
     public CardProblem getProblem(String problemSetId, int problemIndex){
         try{
             String json = redisTemplate.opsForValue().get(problemSetId);
-            if( json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다");
+            if( json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다.");
 
             CardProblemSet problemSet = objectMapper.readValue(json, CardProblemSet.class);
 
@@ -94,7 +94,7 @@ public class CardSelectService {
     public boolean checkAnswer(CardSelectRequest cardSelect){
         try{
             String json = redisTemplate.opsForValue().get(cardSelect.getProblemSetId());
-            if(json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다");
+            if(json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다.");
 
             CardProblemSet problemSet = objectMapper.readValue(json, CardProblemSet.class);
 
