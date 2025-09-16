@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { getProblem, getProblemSetId } from "../api/dictationApi";
-import { Dictation } from "../types";
+import { getProblem, getProblemSetId, checkAnswer } from "../api/dictationApi";
+import { Dictation, DictationRequest } from "../types";
 
 
 export function useDictaionProb(){
@@ -35,7 +35,21 @@ export function useDictaionProb(){
         }
     }
 
+    const submit = async ( data : DictationRequest) => {
+        setLoading(true);
+        setError(null);
+        try{
+            const res = await checkAnswer(data);
+            return res;
+        } catch (e:any){
+            setError(e.response?.data?.message || '제출 실패');
+            throw e;
+        } finally{
+            setLoading(false);
+        }
+    }
 
 
-    return {dictationStart, getDictaionProb, loading, error};
+
+    return {dictationStart, getDictaionProb, submit, loading, error};
 }

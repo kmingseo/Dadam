@@ -1,5 +1,5 @@
 import api from "../../../shared/api";
-import { Dictation } from "../types";
+import { Dictation, DictationRequest } from "../types";
 
 export async function getProblemSetId () {
     try{
@@ -12,11 +12,30 @@ export async function getProblemSetId () {
 }
 
 export async function getProblem({ problemSetId, problemIndex}: Dictation){
-    const response = await api.get('/listening/dictaion/problem',{
+    const response = await api.get('/listening/dictation/problem',{
         params:{
             problemSetId,
             problemIndex
         }
     });
+    return response.data;
+}
+
+export async function checkAnswer (data: DictationRequest){
+    const formData = new FormData();
+    formData.append("image",{
+        uri: data.imagePath,
+        type: "image/png",
+        name: "userWritin.png",
+    }as any);
+
+    formData.append("problemSetId", data.problemSetId);
+    formData.append("problemIndex", data.problemIndex.toString());
+
+    const response = await api.post('/listening/dictation/submit',
+        formData,
+        {headers: {'Content-Type': 'multipart/form-data'}}
+    )
+
     return response.data;
 }

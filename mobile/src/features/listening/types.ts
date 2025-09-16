@@ -24,3 +24,9 @@ export interface Sentence {
   sentenceId : number;
   body : string;
 }
+
+export interface DictationRequest {
+  imagePath : string;
+  problemSetId: string;
+  problemIndex: number;
+}
