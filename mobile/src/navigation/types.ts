@@ -15,8 +15,12 @@ export type DashBoardStackParamList = {
 
 export type ListeningStackParamList = {
   ListeningHome: undefined;
-  ListeningStep1: undefined;
-  ListeningStep2: undefined;
+  CardSelect: undefined;
+  CardSelectProb: { problemSetId: string };
+  CardSelectScore: {score: number};
+  Dictation: undefined;
+  DictationProb: { problemSetId: string };
+  DictationScore: {score: number};
   Test: undefined;
 }
 

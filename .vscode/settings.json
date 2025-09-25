@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 {
     "java.configuration.updateBuildConfiguration": "interactive"
+=======
+{
+    "java.configuration.updateBuildConfiguration": "interactive"
+>>>>>>> feat/listening
 }

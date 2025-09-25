@@ -1,22 +1,27 @@
 import { useState } from "react";
-import { getWordTts } from "../api/listeningApi";
 import Sound from "react-native-sound";
 import RNFS from "react-native-fs";
+import { Card, Sentence } from "../types";
+import { getTts } from "../api/ttsApi";
+
+type TtsTarget = Card | Sentence;
 
 export function useTts(){
     const [error, setError] = useState<string | null>(null);
 
-    const sanitize = (text: string) => text.replace(/[^a-zA-Z0-9가-힣]/g, '_');
-
-    const getVoice = async (text: string) => {
+    const getVoice = async (target: TtsTarget) => {
     try{
         setError(null);
-        const safeText = sanitize(text);
-        const path = `${RNFS.DocumentDirectoryPath}/tts_${safeText}.mp3`;
+
+        const isCard = "wordId" in target;
+        const id = isCard? target.wordId : target.sentenceId;
+        const prefix = isCard? "Cardtts" : "Sentencetts";
+
+        const path = `${RNFS.DocumentDirectoryPath}/${prefix}_${id}.mp3`;
         const exists = await RNFS.exists(path);
 
         if (!exists) {
-            const base64 = await getWordTts(text);
+            const base64 = await getTts(target.body);
              await RNFS.writeFile(path, base64, 'base64');
         }
 
@@ -35,9 +40,13 @@ export function useTts(){
         }
     }
 
-    const deleteTtsFile = async (text: string) => {
-        const safeText = sanitize(text);
-        const path = `${RNFS.DocumentDirectoryPath}/tts_${safeText}.mp3`;
+    const deleteTtsFile = async (target: TtsTarget) => {
+        
+        const isCard = "wordId" in target;
+        const id = isCard? target.wordId : target.sentenceId;
+        const prefix = isCard? "Cardtts" : "Sentencetts";
+
+        const path = `${RNFS.DocumentDirectoryPath}/${prefix}_${id}.mp3`;
         const exists = await RNFS.exists(path);
         if (exists){
             await RNFS.unlink(path);

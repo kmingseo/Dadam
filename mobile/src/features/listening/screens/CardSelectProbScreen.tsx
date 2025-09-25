@@ -11,7 +11,7 @@ type CardSelectProbRouteProp = RouteProp<ListeningStackParamList, 'CardSelectPro
 
 export default function CardSelectProbScreen() {
     const navigation = useListeningNavigation();
-    const route = useRoute<CardSelectProbRouteProp>();
+    const route = useRoute<CardSelectProbRouteProp>(); 
     const {submit, getCardProb, loading, error} = useCardProb(); 
     const {getVoice, deleteTtsFile} = useTts();
     const {problemSetId} = route.params;
@@ -19,7 +19,7 @@ export default function CardSelectProbScreen() {
     const [problemIndex, setProblemIndex] = useState(0);
     const [answerIndex, setAnswerIndex] = useState(-1);
     const [selectedCardIndex , setSelectedCardIndex] = useState<number | null> (null);
-    const [score, setscore] = useState(0);
+    const [score, setScore] = useState(0);
     const [cards, setCards] = useState<Card[]>([]);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -43,14 +43,13 @@ export default function CardSelectProbScreen() {
         const answer = { problemSetId, problemIndex, selectedCardIndex };
         
         const res = await submit(answer);
-        if(res) setscore((prev)=>prev+1);
+        if(res) setScore((prev)=>prev+1);
         setIsSubmitted(true);
     }
 
     const handleNext = async () => {
         if(answerIndex !== -1){
-            const text = cards[answerIndex].body;
-            await deleteTtsFile(text);
+            await deleteTtsFile(cards[answerIndex]);
         }
         if(problemIndex >= 4) {
             navigation.reset({
@@ -63,8 +62,7 @@ export default function CardSelectProbScreen() {
 
     const handleVoice = async () => {
         if(answerIndex !== -1) {
-            const text = cards[answerIndex].body;
-            getVoice(text);
+            getVoice(cards[answerIndex]);
         }
     }
     

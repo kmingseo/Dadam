@@ -27,7 +27,9 @@
     "react-native-picker-select": "^9.3.1",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
+    "react-native-signature-canvas": "^5.0.1",
     "react-native-sound": "^0.12.0",
+    "react-native-webview": "^13.16.0",
     "react-redux": "^9.2.0"
   },
   "devDependencies": {
