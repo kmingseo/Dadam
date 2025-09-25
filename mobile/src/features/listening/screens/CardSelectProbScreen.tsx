@@ -19,7 +19,7 @@ export default function CardSelectProbScreen() {
     const [problemIndex, setProblemIndex] = useState(0);
     const [answerIndex, setAnswerIndex] = useState(-1);
     const [selectedCardIndex , setSelectedCardIndex] = useState<number | null> (null);
-    const [score, setscore] = useState(0);
+    const [score, setScore] = useState(0);
     const [cards, setCards] = useState<Card[]>([]);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -43,7 +43,7 @@ export default function CardSelectProbScreen() {
         const answer = { problemSetId, problemIndex, selectedCardIndex };
         
         const res = await submit(answer);
-        if(res) setscore((prev)=>prev+1);
+        if(res) setScore((prev)=>prev+1);
         setIsSubmitted(true);
     }
 

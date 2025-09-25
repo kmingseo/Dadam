@@ -5,8 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DictationRequest {
+public class DictationSubmitRequest {
+    private String imageBase64;
     private String problemSetId;
     private int problemIndex;
-    private String userAnswer;
 }

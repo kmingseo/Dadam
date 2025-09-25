@@ -3,11 +3,11 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 import { ListeningStackParamList } from '../../../navigation/types';
 import { useListeningNavigation } from '../../../navigation/useAppNavigation';
 
-type CardSelectProbRouteProp = RouteProp<ListeningStackParamList, 'CardSelectScore'>;
+type DictationProbRouteProp = RouteProp<ListeningStackParamList, 'DictationScore'>;
 
-export default function CardSelectScoreScreen() {
+export default function DictationScoreScreen() {
     const navigation = useListeningNavigation();
-    const route = useRoute<CardSelectProbRouteProp>();
+    const route = useRoute<DictationProbRouteProp>();
     const {score} = route.params;
 
     const handleMain = () => {
@@ -19,7 +19,7 @@ export default function CardSelectScoreScreen() {
 
     return (
         <View>
-            <Text>카드 고르기 점수</Text>
+            <Text>받아쓰기 점수</Text>
             <Text>{score}</Text>
             <TouchableOpacity onPress={handleMain}>
                 <Text>돌아가기</Text>

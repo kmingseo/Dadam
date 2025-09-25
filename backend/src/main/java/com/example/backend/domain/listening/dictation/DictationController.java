@@ -1,15 +1,17 @@
 package com.example.backend.domain.listening.dictation;
 
 import com.example.backend.domain.listening.dictation.dto.Dictation;
-import com.example.backend.domain.listening.dictation.dto.DictationRequest;
-import com.example.backend.domain.listening.dictation.dto.DictationResponse;
+import com.example.backend.domain.listening.dictation.dto.DictationCheckRequest;
+import com.example.backend.domain.listening.dictation.dto.DictationSubmitResponse;
+import com.example.backend.domain.listening.dictation.dto.DictationSubmitRequest;
 import com.example.backend.domain.listening.ocr.OCRService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Base64;
 
 @Slf4j
 @Controller
@@ -36,26 +38,22 @@ public class DictationController {
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<DictationResponse> dictationSubmit(
-            @RequestParam("image") MultipartFile image,
-            @RequestParam("problemSetId") String problemSetId,
-            @RequestParam("problemIndex") int problemIndex
+    public ResponseEntity<DictationSubmitResponse> dictationSubmit(
+            @RequestBody DictationSubmitRequest dictationSubmitRequest
     ) throws Exception {
+
+        byte[] imageBytes = Base64.getDecoder().decode(dictationSubmitRequest.getImageBase64());
+
         //ocr 처리
-        String userAnswer = oCRService.detectText(image.getBytes());
-        DictationRequest request = new DictationRequest();
-        request.setProblemSetId(problemSetId);
-        request.setProblemIndex(problemIndex);
+        String userAnswer = oCRService.detectText(imageBytes);
+
+        DictationCheckRequest request = new DictationCheckRequest();
+        request.setProblemSetId(dictationSubmitRequest.getProblemSetId());
+        request.setProblemIndex(dictationSubmitRequest.getProblemIndex());
         request.setUserAnswer(userAnswer);
 
-        //채점
-        boolean isCorrect = dictationService.checkAnswer(request);
-
-        DictationResponse response = new DictationResponse();
-        response.setUserAnswer(userAnswer);
-        response.setCorrect(isCorrect);
-
-        return ResponseEntity.ok(response);
+        //채점 결과
+        return ResponseEntity.ok(dictationService.checkAnswer(request));
     }
 
 

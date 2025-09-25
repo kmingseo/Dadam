@@ -26,7 +26,7 @@ export interface Sentence {
 }
 
 export interface DictationRequest {
-  imagePath : string;
+  imageBase64: string;
   problemSetId: string;
   problemIndex: number;
 }

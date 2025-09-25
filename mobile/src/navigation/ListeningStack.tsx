@@ -5,6 +5,7 @@ import DictationScreen from '../features/listening/screens/DictationScreen';
 import CardSelectProbScreen from '../features/listening/screens/CardSelectProbScreen';
 import CardSelectScoreScreen from '../features/listening/screens/CardSelectScoreScreen';
 import DictationProbScreen from '../features/listening/screens/DictationProbScreen';
+import DictationScoreScreen from '../features/listening/screens/DictationScoreScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,7 @@ export default function ListeningStack() {
       <Stack.Screen name="CardSelectScore" component={CardSelectScoreScreen}/>
       <Stack.Screen name="Dictation" component={DictationScreen}/>
       <Stack.Screen name="DictationProb" component={DictationProbScreen}/>
+      <Stack.Screen name="DictationScore" component={DictationScoreScreen}/>
     </Stack.Navigator>
   );
 }

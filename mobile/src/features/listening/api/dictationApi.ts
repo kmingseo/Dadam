@@ -22,20 +22,8 @@ export async function getProblem({ problemSetId, problemIndex}: Dictation){
 }
 
 export async function checkAnswer (data: DictationRequest){
-    const formData = new FormData();
-    formData.append("image",{
-        uri: data.imagePath,
-        type: "image/png",
-        name: "userWritin.png",
-    }as any);
 
-    formData.append("problemSetId", data.problemSetId);
-    formData.append("problemIndex", data.problemIndex.toString());
-
-    const response = await api.post('/listening/dictation/submit',
-        formData,
-        {headers: {'Content-Type': 'multipart/form-data'}}
-    )
+    const response = await api.post('/listening/dictation/submit', data);
 
     return response.data;
 }
