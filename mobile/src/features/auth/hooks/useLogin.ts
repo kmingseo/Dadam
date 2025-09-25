@@ -15,10 +15,12 @@ export function useLogin() {
     setError(null);
     try {
       const res = await loginApi(data);
-      const token = res.token;
+      const accessToken = res.accessToken;
+      const refreshToken = res.refreshToken;
 
-      await AsyncStorage.setItem('accessToken', token);
-      dispatch(loginSuccess(token));
+      await AsyncStorage.setItem('accessToken', accessToken);
+      await AsyncStorage.setItem('refreshToken', refreshToken);
+      dispatch(loginSuccess(accessToken));
 
       return res;
     } catch (e: any) {

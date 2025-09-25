@@ -1,6 +1,7 @@
 package com.example.backend.domain.user;
 
 import com.example.backend.domain.user.dto.LoginRequest;
+import com.example.backend.domain.user.dto.TokenResponse;
 import com.example.backend.domain.user.dto.SignupRequest;
 import com.example.backend.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class UserService {
     private final UserRepository userRepository;
    private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     //회원가입
    public void signup(SignupRequest signupRequest) {
@@ -34,7 +36,7 @@ public class UserService {
 
    }
 
-   public String login(LoginRequest loginRequest) {
+   public TokenResponse login(LoginRequest loginRequest) {
        User user = userRepository.findById(loginRequest.getUserId())
                .orElseThrow(()->new RuntimeException("존재하지 않는 ID입니다."));
 
@@ -42,6 +44,12 @@ public class UserService {
            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
        }
 
-       return jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
+       String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getRole());
+       String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId(), user.getRole());
+
+       refreshTokenService.storeRefreshToken(user.getUserId(), refreshToken);
+
+       return new TokenResponse(accessToken, refreshToken);
    }
+
 }

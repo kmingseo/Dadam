@@ -1,6 +1,7 @@
 package com.example.backend.global.security;
 
 import com.example.backend.domain.user.User;
+import com.example.backend.domain.user.UserDetailsImpl;
 import com.example.backend.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,11 +22,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
-
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUserId())
-                .password(user.getPassword())
-                .authorities(List.of(new SimpleGrantedAuthority(user.getRole().name())))
-                .build();
+        return new UserDetailsImpl(user);
     }
 }
