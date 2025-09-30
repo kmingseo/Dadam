@@ -59,7 +59,6 @@ export default function DictationProbScreen () {
             const m = dataURL.match(/^data:image\/.+;base64,(.*)$/);
             if(!m) throw new Error('유효하지 않은 dataURL');
             const base64 = m[1];
-            console.log(base64.length);
             const data: DictationRequest = {
                 imageBase64: base64,
                 problemSetId,
@@ -67,7 +66,6 @@ export default function DictationProbScreen () {
             };
 
             const res = await submit(data);
-            console.log(res);
                 
             if(res.correct) setScore((prev)=>prev+1);
             setUserAnswer(res.userAnswer);

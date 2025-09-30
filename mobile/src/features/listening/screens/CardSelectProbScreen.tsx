@@ -30,7 +30,6 @@ export default function CardSelectProbScreen() {
             setSelectedCardIndex(null);
             const prob = await getCardProb({problemSetId, problemIndex});
             setCards(prob.cards);
-            console.log(cards);
             setAnswerIndex(prob.answerIndex);
         }
         loadProblem();
