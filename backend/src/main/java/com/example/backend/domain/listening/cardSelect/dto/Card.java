@@ -14,4 +14,5 @@ public class Card {
     private int wordId;
     private String body;
     private String imageUrl;
+    private String translatedBody;
 }

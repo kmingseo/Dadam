@@ -24,7 +24,6 @@ export default function DictationProbScreen () {
     const [sentence, setSentence] = useState<Sentence | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [userAnswer, setUserAnswer] = useState(null);
-    const [answer, setAnswer] = useState(null);
 
     useEffect(()=>{
         const loadProblem = async () => {
@@ -71,7 +70,6 @@ export default function DictationProbScreen () {
             console.log(res);
                 
             if(res.correct) setScore((prev)=>prev+1);
-            setAnswer(res.answer);
             setUserAnswer(res.userAnswer);
             setIsSubmitted(true);
         } catch (err) {
@@ -123,7 +121,10 @@ export default function DictationProbScreen () {
                     <Text>사용자 답안: {userAnswer}</Text>
                 </View>
                 <View style={{marginBottom: 8}}>
-                    <Text>답: {answer}</Text>
+                    <Text>답: {sentence?.body}</Text>
+                    {isSubmitted && sentence?.translatedBody && (
+                        <Text>{sentence?.translatedBody}</Text>
+                    )}
                 </View>
                 <TouchableOpacity style={styles.button} onPress={handleNext}>
                     <Text>다음</Text>

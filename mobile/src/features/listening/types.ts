@@ -13,6 +13,7 @@ export interface Card {
   wordId : number;
   body : string;
   imageUrl : string;
+  translatedBody : string;
 }
 
 export interface Dictation {
@@ -23,6 +24,7 @@ export interface Dictation {
 export interface Sentence {
   sentenceId : number;
   body : string;
+  translatedBody : string;
 }
 
 export interface DictationRequest {

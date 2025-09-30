@@ -12,4 +12,5 @@ import lombok.Setter;
 public class Dictation {
     private int sentenceId;
     private String body;
+    private String translatedBody;
 }

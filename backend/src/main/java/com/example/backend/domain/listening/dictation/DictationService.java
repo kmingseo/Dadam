@@ -3,15 +3,19 @@ package com.example.backend.domain.listening.dictation;
 import com.example.backend.domain.listening.dictation.dto.Dictation;
 import com.example.backend.domain.listening.dictation.dto.DictationCheckRequest;
 import com.example.backend.domain.listening.dictation.dto.DictationSubmitResponse;
+import com.example.backend.domain.listening.trans.TranslationService;
 import com.example.backend.domain.sentence.Sentence;
 import com.example.backend.domain.sentence.SentenceRepository;
+import com.example.backend.domain.user.UserDetailsImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -26,15 +30,29 @@ public class DictationService {
     private final ObjectMapper objectMapper;
 
     private static final long TTL_SECONDS = 1800;
+    private final TranslationService translationService;
 
     //문제 만들기
     public List<Dictation> createProblems() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userLang = userDetails.getUser().getNativeLanguage();
+
         List<Sentence> sentences= sentenceRepository.findRandomSentenceBodies(5);
 
-        return sentences.stream()
-                .map(s -> new Dictation(s.getId(), s.getBody()))
-                .collect(Collectors.toList());
+        List<String> texts = sentences.stream()
+                .map(Sentence::getBody)
+                .toList();
 
+        List<String> translations = translationService.translate(texts, userLang);
+
+        List<Dictation> dictations = new ArrayList<>();
+        for(int i = 0; i < sentences.size(); i++) {
+            Sentence sentence = sentences.get(i);
+            String translated = translations.get(i);
+            dictations.add(new Dictation(sentence.getId(), sentence.getBody(), translated));
+        }
+
+        return dictations;
     }
 
     //하나로 묶어서 반환
