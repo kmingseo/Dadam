@@ -4,6 +4,8 @@ import com.example.backend.domain.listening.cardSelect.dto.Card;
 import com.example.backend.domain.listening.cardSelect.dto.CardProblem;
 import com.example.backend.domain.listening.cardSelect.dto.CardProblemSet;
 import com.example.backend.domain.listening.cardSelect.dto.CardSelectRequest;
+import com.example.backend.domain.listening.trans.TranslationService;
+import com.example.backend.domain.user.UserDetailsImpl;
 import com.example.backend.domain.word.Word;
 import com.example.backend.domain.word.WordRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,6 +26,7 @@ public class CardSelectService {
     private final WordRepository wordRepository;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final TranslationService translationService;
 
     private static final long TTL_SECONDS = 1800;
 
@@ -30,15 +34,31 @@ public class CardSelectService {
     public List<CardProblem> createProblems() {
         List<Word> answerWords = wordRepository.findRandomWords(5);
         List<CardProblem> problems = new ArrayList<>();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String userLang = userDetails.getUser().getNativeLanguage();
+
 
         for (Word answer : answerWords) {
-            List<Word> wrongOptions = wordRepository.findRandomWordsExcludeId(answer.getId(),3);
+            List<Word> options = new ArrayList<>();
+            //정답 단어
+            options.add(answer);
+            //나머지 오답 단어
+            options.addAll(wordRepository.findRandomWordsExcludeId(answer.getId(), 3));
+
+            // body만 추출
+            List<String> texts = options.stream()
+                    .map(Word::getBody)
+                    .toList();
+            
+            //모국어 번역
+            List<String> translations = translationService.translate(texts, userLang);
+
+            //매핑
             List<Card> cards = new ArrayList<>();
-
-            cards.add(new Card(answer.getId(), answer.getBody(),answer.getImageUrl()));
-
-            for(Word w : wrongOptions) {
-                cards.add(new Card(w.getId(), w.getBody(), w.getImageUrl()));
+            for(int i = 0; i < options.size(); i++) {
+                Word w = options.get(i);
+                String translated = translations.get(i);
+                cards.add(new Card(w.getId(), w.getBody(), w.getImageUrl(), translated));
             }
 
             Collections.shuffle(cards);
@@ -77,7 +97,7 @@ public class CardSelectService {
     public CardProblem getProblem(String problemSetId, int problemIndex){
         try{
             String json = redisTemplate.opsForValue().get(problemSetId);
-            if( json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다");
+            if( json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다.");
 
             CardProblemSet problemSet = objectMapper.readValue(json, CardProblemSet.class);
 
@@ -94,7 +114,7 @@ public class CardSelectService {
     public boolean checkAnswer(CardSelectRequest cardSelect){
         try{
             String json = redisTemplate.opsForValue().get(cardSelect.getProblemSetId());
-            if(json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다");
+            if(json == null) throw new RuntimeException("해당 id의 문제를 찾을 수 없습니다.");
 
             CardProblemSet problemSet = objectMapper.readValue(json, CardProblemSet.class);
 

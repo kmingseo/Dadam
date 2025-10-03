@@ -10,6 +10,25 @@ export interface CardProblem {
 }
 
 export interface Card {
+  wordId : number;
   body : string;
   imageUrl : string;
+  translatedBody : string;
+}
+
+export interface Dictation {
+  problemSetId : string;
+  problemIndex : number;
+}
+
+export interface Sentence {
+  sentenceId : number;
+  body : string;
+  translatedBody : string;
+}
+
+export interface DictationRequest {
+  imageBase64: string;
+  problemSetId: string;
+  problemIndex: number;
 }

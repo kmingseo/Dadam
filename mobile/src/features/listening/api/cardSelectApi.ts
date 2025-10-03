@@ -26,7 +26,3 @@ export async function checkAnswer(data: CardSelectRequest) {
   return response.data;
 }
 
-export async function getWordTts(text: string){
-  const response = await api.post('api/tts', {text});
-  return response.data;
-}

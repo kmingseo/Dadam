@@ -31,6 +31,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.google.cloud:google-cloud-texttospeech:2.68.0'
+	implementation 'com.google.cloud:google-cloud-translate:2.45.0'
+	implementation 'com.google.cloud:google-cloud-vision:3.68.0'
 	implementation 'com.google.auth:google-auth-library-oauth2-http:1.37.1'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	compileOnly 'org.projectlombok:lombok'
