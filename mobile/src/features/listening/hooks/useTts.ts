@@ -30,8 +30,7 @@ export function useTts(){
 
         if (!exists) {
             const base64 = await getTts(target.body);
-            console.log(target.body);
-             await RNFS.writeFile(path, base64, 'base64');
+            await RNFS.writeFile(path, base64, 'base64');
         }
 
         const sound = new Sound(path,'',(error)=>{
