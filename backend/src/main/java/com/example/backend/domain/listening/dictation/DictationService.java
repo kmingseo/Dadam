@@ -7,6 +7,8 @@ import com.example.backend.domain.listening.trans.TranslationService;
 import com.example.backend.domain.sentence.Sentence;
 import com.example.backend.domain.sentence.SentenceRepository;
 import com.example.backend.domain.user.UserDetailsImpl;
+import com.example.backend.domain.word.Word;
+import com.example.backend.domain.word.WordRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,34 +33,49 @@ public class DictationService {
 
     private static final long TTL_SECONDS = 1800;
     private final TranslationService translationService;
+    private final WordRepository wordRepository;
 
     //문제 만들기
-    public List<Dictation> createProblems() {
+    public List<Dictation> createProblems(String type) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String userLang = userDetails.getUser().getNativeLanguage();
 
-        List<Sentence> sentences= sentenceRepository.findRandomSentenceBodies(5);
+        List<String> texts = new ArrayList<>();
+        List<Integer> ids = new ArrayList<>();
 
-        List<String> texts = sentences.stream()
-                .map(Sentence::getBody)
-                .toList();
+        if("word".equals(type)) {
+            List<Word> words = wordRepository.findRandomWords(5);
+            texts = words.stream()
+                    .map(Word::getBody)
+                    .toList();
+            ids = words.stream().map(Word::getId).toList();
+        }
+        else if("sentence".equals(type)) {
+            List<Sentence> sentences= sentenceRepository.findRandomSentenceBodies(5);
+            texts = sentences.stream()
+                    .map(Sentence::getBody)
+                    .toList();
+            ids = sentences.stream().map(Sentence::getId).toList();
+        } else {
+            throw new IllegalArgumentException("유효하지 않은 타입입니다.");
+        }
+
 
         List<String> translations = translationService.translate(texts, userLang);
 
         List<Dictation> dictations = new ArrayList<>();
-        for(int i = 0; i < sentences.size(); i++) {
-            Sentence sentence = sentences.get(i);
+        for(int i = 0; i < texts.size(); i++) {
             String translated = translations.get(i);
-            dictations.add(new Dictation(sentence.getId(), sentence.getBody(), translated));
+            dictations.add(new Dictation(ids.get(i), texts.get(i), translated, type));
         }
 
         return dictations;
     }
 
     //하나로 묶어서 반환
-    public String createProblemSet() {
+    public String createProblemSet(String type) {
         try{
-            List<Dictation> problems = createProblems();
+            List<Dictation> problems = createProblems(type);
 
             String problemSetId = UUID.randomUUID().toString();
 

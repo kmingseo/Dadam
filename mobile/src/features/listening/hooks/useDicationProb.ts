@@ -7,11 +7,11 @@ export function useDictaionProb(){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const dictationStart = async () => {
+    const dictationStart = async (type: 'word' | 'sentence') => {
         setLoading(true);
         setError(null);
         try{
-            const res = await getProblemSetId();
+            const res = await getProblemSetId(type);
             return res;
         } catch (e:any){
             setError(e.response?.data?.message || '문제 생성 실패');

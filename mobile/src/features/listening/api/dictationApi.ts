@@ -1,9 +1,11 @@
 import api from "../../../shared/api";
 import { Dictation, DictationRequest } from "../types";
 
-export async function getProblemSetId () {
+export async function getProblemSetId (type: 'word' | 'sentence') {
     try{
-        const response = await api.get('/listening/dictation/start');
+        const response = await api.get('/listening/dictation/start',{
+            params: {type},
+        });
         return response.data;
     } catch (err) {
         console.log('API 요청 실패', err);

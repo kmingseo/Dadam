@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useListeningNavigation } from '../../../navigation/useAppNavigation';
-import { useCardProb } from '../hooks/useCardProb';
+import { useListeningNavigation } from '../../../../navigation/useAppNavigation';
+import { useCardProb } from '../../hooks/useCardProb';
 
 export default function CardSelectScreen() {
     const navigation = useListeningNavigation();

@@ -3,11 +3,13 @@ package com.example.backend.domain.listening.ocr;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
+import jakarta.annotation.PreDestroy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class OCRService {
@@ -42,5 +44,13 @@ public class OCRService {
         }
 
         return responses.get(0).getFullTextAnnotation().getText();
+    }
+
+    @PreDestroy
+    public void shutdownVisionClient() throws Exception {
+        if (visionClient != null) {
+            visionClient.shutdown();
+            visionClient.awaitTermination(5, TimeUnit.SECONDS);
+        }
     }
 }

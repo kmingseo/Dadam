@@ -1,11 +1,11 @@
 import { Text, TouchableOpacity, View, Platform, StyleSheet } from "react-native";
-import { useListeningNavigation } from "../../../navigation/useAppNavigation";
+import { useListeningNavigation } from "../../../../navigation/useAppNavigation";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { ListeningStackParamList } from "../../../navigation/types";
-import { useDictaionProb } from "../hooks/useDicationProb";
-import { useTts } from "../hooks/useTts";
+import { ListeningStackParamList } from "../../../../navigation/types";
+import { useDictaionProb } from "../../hooks/useDicationProb";
+import { useTts } from "../../hooks/useTts";
 import { useEffect, useState } from "react";
-import { DictationRequest, Sentence } from "../types";
+import { DictationRequest, DictationProb } from "../../types";
 import Signature from 'react-native-signature-canvas';
 import { useRef } from "react";
 
@@ -21,7 +21,7 @@ export default function DictationProbScreen () {
 
     const [score, setScore] = useState(0);    
     const [problemIndex, setProblemIndex] = useState(0);
-    const [sentence, setSentence] = useState<Sentence | null>(null);
+    const [sentence, setSentence] = useState<DictationProb | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [userAnswer, setUserAnswer] = useState(null);
 

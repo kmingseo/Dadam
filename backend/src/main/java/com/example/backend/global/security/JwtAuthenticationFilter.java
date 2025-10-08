@@ -22,13 +22,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path.startsWith("/auth/sign-in")
+                || path.startsWith("/auth/sign-up")
+                || path.startsWith("/test");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try{
             String token = resolveToken(request);
 
-            if (token != null && jwtTokenProvider.validateToken(token)) {
+            if (token == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("No access token");
+                response.getWriter().flush();
+                return;
+            }
+
+            if (jwtTokenProvider.validateToken(token)) {
                 String userId = jwtTokenProvider.getUserIdFromToken(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
