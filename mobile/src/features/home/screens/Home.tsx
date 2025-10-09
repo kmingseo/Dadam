@@ -1,8 +1,13 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useLogout } from '../../auth/hooks/useLogout';
+import { useEffect } from 'react';
 
 export default function Home() {
   const {logout} = useLogout();
+
+  useEffect(()=>{
+    
+  })
   
   const handleLogout = async () => {
     await logout();
