@@ -15,8 +15,3 @@ export async function logoutApi(refreshToken: string){
   const response = await api.post('/auth/logout', {refreshToken});
   return response.data;
 }
-
-export async function getUserInfo(){
-  const response = await api.get('/auth/user-info');
-  return response.data;
-}

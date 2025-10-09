@@ -46,7 +46,6 @@ function LoginScreen() {
     <SafeAreaView>
       <ScrollView>
         <View>
-          <Text>Login Screen</Text>
           <Text>서버 연결 {check}</Text>
 
           <TextInput

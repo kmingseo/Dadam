@@ -1,6 +1,5 @@
 package com.example.backend.domain.user.dto;
 
-import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 

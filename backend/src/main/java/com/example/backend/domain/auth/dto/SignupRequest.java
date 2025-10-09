@@ -1,4 +1,4 @@
-package com.example.backend.domain.user.dto;
+package com.example.backend.domain.auth.dto;
 
 import lombok.Getter;
 import lombok.Setter;

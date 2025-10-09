@@ -22,33 +22,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path.startsWith("/auth/sign-in")
+                || path.startsWith("/auth/sign-up")
+                || path.startsWith("/test");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        try{
-            String token = resolveToken(request);
+        String token = resolveToken(request);
 
-            if (token != null && jwtTokenProvider.validateToken(token)) {
-                String userId = jwtTokenProvider.getUserIdFromToken(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
+        if (token != null) {
+            try {
+                if (jwtTokenProvider.validateToken(token)) {
+                    String userId = jwtTokenProvider.getUserIdFromToken(token);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Access token expired");
+                response.getWriter().flush();
+                return;
+            } catch (JwtException | IllegalArgumentException ex) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid token");
+                response.getWriter().flush();
+                return;
             }
-
-            filterChain.doFilter(request, response);
-        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Access token expired");
-            response.getWriter().flush();
-        } catch (JwtException | IllegalArgumentException ex) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid token");
-            response.getWriter().flush();
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {

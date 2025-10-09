@@ -1,11 +1,11 @@
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { useListeningNavigation } from '../../../navigation/useAppNavigation';
-import { useCardProb } from '../hooks/useCardProb';
+import { useListeningNavigation } from '../../../../navigation/useAppNavigation';
+import { useCardProb } from '../../hooks/useCardProb';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { ListeningStackParamList } from '../../../navigation/types';
+import { ListeningStackParamList } from '../../../../navigation/types';
 import { useEffect, useState } from 'react';
-import { Card } from '../types';
-import { useTts } from '../hooks/useTts';
+import { Card } from '../../types';
+import { useTts } from '../../hooks/useTts';
 
 type CardSelectProbRouteProp = RouteProp<ListeningStackParamList, 'CardSelectProb'>;
 

@@ -1,4 +1,4 @@
-package com.example.backend.domain.user;
+package com.example.backend.domain.auth;
 
 
 import lombok.RequiredArgsConstructor;

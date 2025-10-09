@@ -1,11 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ListeningHome from '../features/listening/screens/ListeningHome';
-import CardSelectScreen from '../features/listening/screens/CardSelectScreen';
-import DictationScreen from '../features/listening/screens/DictationScreen';
-import CardSelectProbScreen from '../features/listening/screens/CardSelectProbScreen';
-import CardSelectScoreScreen from '../features/listening/screens/CardSelectScoreScreen';
-import DictationProbScreen from '../features/listening/screens/DictationProbScreen';
-import DictationScoreScreen from '../features/listening/screens/DictationScoreScreen';
+import CardSelectScreen from '../features/listening/screens/CardSelect/CardSelectScreen';
+import DictationScreen from '../features/listening/screens/Dictation/DictationScreen';
+import CardSelectProbScreen from '../features/listening/screens/CardSelect/CardSelectProbScreen';
+import CardSelectScoreScreen from '../features/listening/screens/CardSelect/CardSelectScoreScreen';
+import DictationProbScreen from '../features/listening/screens/Dictation/DictationProbScreen';
+import DictationScoreScreen from '../features/listening/screens/Dictation/DictationScoreScreen';
 import Test from '../features/listening/screens/Test';
 
 const Stack = createNativeStackNavigator();

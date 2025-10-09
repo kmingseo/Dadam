@@ -21,10 +21,11 @@ export interface Dictation {
   problemIndex : number;
 }
 
-export interface Sentence {
-  sentenceId : number;
+export interface DictationProb {
+  id : number;
   body : string;
   translatedBody : string;
+  type: 'word' | 'sentence'
 }
 
 export interface DictationRequest {

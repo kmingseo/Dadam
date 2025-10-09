@@ -23,8 +23,8 @@ public class DictationController {
     private final OCRService oCRService;
 
     @GetMapping("/start")
-    public ResponseEntity<String> dictationStart() {
-        String problemId = dictationService.createProblemSet();
+    public ResponseEntity<String> dictationStart(@RequestParam String type) {
+        String problemId = dictationService.createProblemSet(type);
         return ResponseEntity.ok(problemId);
     }
 

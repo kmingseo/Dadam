@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TokenRequest {
-    private String refreshToken;
+public class RewardRequest {
+    private int coin;
 }

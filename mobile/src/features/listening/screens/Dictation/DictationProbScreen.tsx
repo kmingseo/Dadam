@@ -1,11 +1,11 @@
 import { Text, TouchableOpacity, View, Platform, StyleSheet } from "react-native";
-import { useListeningNavigation } from "../../../navigation/useAppNavigation";
+import { useListeningNavigation } from "../../../../navigation/useAppNavigation";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { ListeningStackParamList } from "../../../navigation/types";
-import { useDictaionProb } from "../hooks/useDicationProb";
-import { useTts } from "../hooks/useTts";
+import { ListeningStackParamList } from "../../../../navigation/types";
+import { useDictaionProb } from "../../hooks/useDicationProb";
+import { useTts } from "../../hooks/useTts";
 import { useEffect, useState } from "react";
-import { DictationRequest, Sentence } from "../types";
+import { DictationRequest, DictationProb } from "../../types";
 import Signature from 'react-native-signature-canvas';
 import { useRef } from "react";
 
@@ -21,7 +21,7 @@ export default function DictationProbScreen () {
 
     const [score, setScore] = useState(0);    
     const [problemIndex, setProblemIndex] = useState(0);
-    const [sentence, setSentence] = useState<Sentence | null>(null);
+    const [dictationProb, setDictationProb] = useState<DictationProb | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [userAnswer, setUserAnswer] = useState(null);
 
@@ -29,7 +29,7 @@ export default function DictationProbScreen () {
         const loadProblem = async () => {
             setIsSubmitted(false);
             const prob = await getDictaionProb({problemSetId, problemIndex});
-            setSentence(prob);
+            setDictationProb(prob);
         }
         loadProblem();
     },[problemIndex])
@@ -38,8 +38,8 @@ export default function DictationProbScreen () {
         if(signRef.current){
         signRef.current.clearSignature();
         }
-        if(sentence !== null ){
-            await deleteTtsFile(sentence);
+        if(dictationProb !== null ){
+            await deleteTtsFile(dictationProb);
         }
         if(problemIndex>=4) {
             navigation.reset({
@@ -78,8 +78,8 @@ export default function DictationProbScreen () {
      const handleClear = () => signRef.current?.clearSignature();
     
     const handleVoice = async () => {
-        if(sentence!== null) {
-            getVoice(sentence);
+        if(dictationProb!== null) {
+            getVoice(dictationProb);
         }
     }
 
@@ -119,9 +119,9 @@ export default function DictationProbScreen () {
                     <Text>사용자 답안: {userAnswer}</Text>
                 </View>
                 <View style={{marginBottom: 8}}>
-                    <Text>답: {sentence?.body}</Text>
-                    {isSubmitted && sentence?.translatedBody && (
-                        <Text>{sentence?.translatedBody}</Text>
+                    <Text>답: {dictationProb?.body}</Text>
+                    {isSubmitted && dictationProb?.translatedBody && (
+                        <Text>{dictationProb?.translatedBody}</Text>
                     )}
                 </View>
                 <TouchableOpacity style={styles.button} onPress={handleNext}>

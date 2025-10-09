@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useListeningNavigation } from '../../../navigation/useAppNavigation';
 import { useEffect, useState } from 'react';
-import { getUserInfo } from '../../auth/api/authApi';
+import { getUserInfo } from '../../home/api/userApi';
+
 
 export default function ListeningHome() {
     const navigation = useListeningNavigation();
