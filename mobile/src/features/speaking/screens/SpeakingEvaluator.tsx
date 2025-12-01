@@ -24,6 +24,7 @@ export interface WordType {
     imageUrl: string;
     languageCode: string;
 }
+import RNFS from 'react-native-fs';
 
 export interface ResultType {
     transcribedText: string;
@@ -135,19 +136,11 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
     const requestRecordingPermission = async () => {
         if (Platform.OS === "android") {
             try {
-                const granted = await PermissionsAndroid.requestMultiple([
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-                ]);
-                const recordGranted =
-                    granted["android.permission.RECORD_AUDIO"] ===
-                    PermissionsAndroid.RESULTS.GRANTED;
-                const storageGranted =
-                    granted["android.permission.WRITE_EXTERNAL_STORAGE"] ===
-                    PermissionsAndroid.RESULTS.GRANTED;
-
-                if (!recordGranted || !storageGranted) {
-                    Alert.alert("권한 필요", "녹음 및 저장 권한이 필요합니다.");
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+                );
+                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                    Alert.alert("권한 필요", "녹음 권한이 필요합니다.");
                     return false;
                 }
             } catch (err) {
@@ -157,6 +150,7 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
         }
         return true;
     };
+
 
     const startRecording = async () => {
         const hasPermission = await requestRecordingPermission();
@@ -173,16 +167,11 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
             };
 
             const path = Platform.select({
-                ios: "hello.m4a",
-                android: "/sdcard/hello.mp4",
+                ios: `${RNFS.CachesDirectoryPath}/hello.m4a`,
+                android: `${RNFS.CachesDirectoryPath}/hello.mp4`,
             });
 
-            if (!path) {
-                Alert.alert("녹음 오류", "지원되지 않는 플랫폼 경로");
-                return;
-            }
-
-            const uri = await audioRecorderPlayerRef.current.startRecorder(path, audioSet);
+            const uri = await audioRecorderPlayerRef.current.startRecorder(path!, audioSet);
             audioRecorderPlayerRef.current.addRecordBackListener((e: any) => {
                 console.log("Record Time:", e.currentPosition);
             });
@@ -196,6 +185,7 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
             setIsRecording(false);
         }
     };
+
 
     const stopRecording = async () => {
         try {
