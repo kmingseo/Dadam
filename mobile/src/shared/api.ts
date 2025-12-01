@@ -4,6 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { store } from './store';
 import { logoutSuccess } from './store/authSlice';
 
+
+console.log("--- Axios Base URL 로드 결과 ---");
+console.log(`로딩된 API 주소: ${REACT_APP_SPRING_API}`);
+console.log("-------------------------------");
+
+
 const api = axios.create({
   baseURL: REACT_APP_SPRING_API,
   timeout: 5000,

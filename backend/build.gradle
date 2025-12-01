@@ -47,6 +47,8 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'com.google.cloud:google-cloud-speech:4.2.0'
+	implementation "io.netty:netty-resolver-dns-native-macos:4.1.110.Final:osx-aarch_64"
+
 }
 
 tasks.named('test') {

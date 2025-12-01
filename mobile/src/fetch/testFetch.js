@@ -8,6 +8,7 @@ export const testFetch = async () => {
         return res.data;
     } catch (err) {
         console.error(err);
+        console.log('??');
         return "실패";
     }
 };

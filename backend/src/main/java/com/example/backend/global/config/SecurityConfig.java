@@ -41,8 +41,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ⭐️ /images/** 경로를 추가하여 인증 없이 접근 허용
-                        .requestMatchers("/auth/sign-up", "/auth/sign-in", "/test", "api/evaluate-speech", "/images/**").permitAll()
+                        .requestMatchers(
+                                "/auth/sign-up",
+                                "/auth/sign-in",
+                                "/api/words",
+                                "/api/dataset",
+                                "/api/sentences",
+                                "/api/consonants",
+                                "/api/vowels",
+                                "/api/syllables",
+                                "/images/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
