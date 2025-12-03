@@ -1,8 +1,16 @@
-# Default ignored files
-/shelf/
-/workspace.xml
-# Editor-based HTTP Client requests
-/httpRequests/
-# Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
+"use strict";
+
+export function createParamsFromAction({
+  action,
+  routeParamList
+}) {
+  const {
+    name,
+    params
+  } = action.payload;
+  return routeParamList[name] !== undefined ? {
+    ...routeParamList[name],
+    ...params
+  } : params;
+}
+//# sourceMappingURL=createParamsFromAction.js.map

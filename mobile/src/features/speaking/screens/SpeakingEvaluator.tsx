@@ -17,6 +17,7 @@ import AudioRecorderPlayer, {
     OutputFormatAndroidType,
     AVEncoderAudioQualityIOSType,
 } from "react-native-audio-recorder-player";
+import RNFS from "react-native-fs";
 
 export interface WordType {
     id: number | null;
@@ -24,7 +25,6 @@ export interface WordType {
     imageUrl: string;
     languageCode: string;
 }
-import RNFS from 'react-native-fs';
 
 export interface ResultType {
     transcribedText: string;
@@ -37,7 +37,7 @@ interface SpeakingEvaluatorProps {
     type: "consonant" | "vowel" | "syllable" | "word" | "sentence";
 }
 
-const BASE_URL = "http://10.0.2.2:8080"; // 에뮬레이터에서 localhost 대신 10.0.2.2 사용
+const BASE_URL = "http://10.0.2.2:8080";
 
 const LANGUAGES = [
     { code: "ko", name: "한국어" },
@@ -98,25 +98,21 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
         setStatusMessage(`"${filteredWordList[currentWordIndex].targetWord}" 발음하기`);
     }, [filteredWordList, currentWordIndex]);
 
-    // 🔹 수정된 fetchWordList
-
+    // 🔹 정상 복구된 fetchWordList (GET 요청)
     const fetchWordList = async () => {
         try {
-            const res = await axios.get(`${BASE_URL}/api/${type}s`); // type에 따라 API 호출
+            const res = await axios.get(`${BASE_URL}/api/${type}s`);
             console.log("백엔드 응답:", res.data);
 
             const mapped = res.data.map((item: any) => {
-                // item이 Word 객체인지, 문자열 배열인지 구분
                 if (typeof item === "string") {
-                    // 자음/모음/음절
                     return {
                         id: null,
                         targetWord: item,
-                        imageUrl: "",   // 이미지 없음
+                        imageUrl: "",
                         languageCode: "ko",
                     };
                 } else {
-                    // 단어/문장
                     return {
                         id: item.id ?? null,
                         targetWord: item.text ?? "",
@@ -151,7 +147,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
         return true;
     };
 
-
     const startRecording = async () => {
         const hasPermission = await requestRecordingPermission();
         if (!hasPermission) return;
@@ -168,10 +163,11 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
 
             const path = Platform.select({
                 ios: `${RNFS.CachesDirectoryPath}/hello.m4a`,
-                android: `${RNFS.CachesDirectoryPath}/hello.mp4`,
+                android: `${RNFS.CachesDirectoryPath}/hello.m4a`,
             });
 
             const uri = await audioRecorderPlayerRef.current.startRecorder(path!, audioSet);
+
             audioRecorderPlayerRef.current.addRecordBackListener((e: any) => {
                 console.log("Record Time:", e.currentPosition);
             });
@@ -185,7 +181,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
             setIsRecording(false);
         }
     };
-
 
     const stopRecording = async () => {
         try {
@@ -202,23 +197,22 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
     };
 
     const uploadRecording = async (filePath: string) => {
-        if (!currentWord.id) return;
+        if (!currentWord.targetWord) return;
 
         setIsLoading(true);
         try {
-            const fileUri =
-                Platform.OS === "android" && filePath.startsWith("file://")
-                    ? filePath.substring(7)
-                    : filePath;
+            // 1. fileUri 변수 생성 로직 제거/수정 (filePath를 그대로 사용)
+            // 2. name과 type을 플랫폼에 맞게 동적으로 설정
 
             const formData = new FormData();
             formData.append("audio", {
-                uri: fileUri,
-                name: "recording.mp4",
-                type: "audio/mp4",
+                uri: filePath, // 녹음기가 반환한 경로 그대로 사용
+                name: Platform.OS === "ios" ? "recording.m4a" : "recording.mp4",
+                type: Platform.OS === "ios" ? "audio/m4a" : "audio/mp4",
             });
-            formData.append("wordId", currentWord.id.toString());
+            formData.append("word", currentWord.targetWord);
 
+            // Axios 헤더를 명시적으로 설정하여 확실하게 전송
             const res = await axios.post(`${BASE_URL}/api/evaluate-speech`, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
@@ -230,6 +224,7 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
             if (data.score < 80) Alert.alert("아쉽습니다", `${data.score}점입니다.`);
         } catch (e) {
             console.error("평가 요청 실패:", e);
+            // 서버 콘솔에 로그가 찍히는지 확인
             Alert.alert("오류", "평가 요청 실패. 서버 상태를 확인하세요.");
         } finally {
             setIsLoading(false);

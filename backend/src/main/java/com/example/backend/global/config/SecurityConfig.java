@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 "/api/sentences",
                                 "/api/consonants",
                                 "/api/vowels",
+                                "/api/evaluate-speech",
                                 "/api/syllables",
                                 "/images/**"
                         ).permitAll()
