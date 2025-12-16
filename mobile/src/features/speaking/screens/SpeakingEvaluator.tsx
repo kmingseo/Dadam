@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
     View,
     Text,
@@ -8,6 +8,7 @@ import {
     Alert,
     Platform,
     PermissionsAndroid,
+    StyleSheet, // 스타일링을 위해 추가
 } from "react-native";
 import axios from "axios";
 import AudioRecorderPlayer, {
@@ -19,6 +20,7 @@ import AudioRecorderPlayer, {
 } from "react-native-audio-recorder-player";
 import RNFS from "react-native-fs";
 
+// WordScene에서 사용하므로 export 유지
 export interface WordType {
     id: number | null;
     targetWord: string;
@@ -35,146 +37,94 @@ export interface ResultType {
 
 interface SpeakingEvaluatorProps {
     type: "consonant" | "vowel" | "syllable" | "word" | "sentence";
+    // ⭐️ currentWord와 onNext를 선택적 props로 변경 (? 추가)
+    currentWord?: WordType;
+    onNext?: () => void;
 }
 
 const BASE_URL = "http://10.0.2.2:8080";
 
-const LANGUAGES = [
-    { code: "ko", name: "한국어" },
-    { code: "ja", name: "일본어" },
-    { code: "zh", name: "중국어" },
-    { code: "vi", name: "베트남어" },
-];
+const typeLabels = {
+    "consonant": "자음",
+    "vowel": "모음",
+    "syllable": "음절",
+    "word": "단어",
+    "sentence": "문장",
+};
 
-const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
-    const audioRecorderPlayerRef = useRef<any>(null);
+const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord, onNext }) => {
+    const recorderRef = useRef<AudioRecorderPlayer | null>(null);
 
-    const [wordList, setWordList] = useState<WordType[]>([]);
-    const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0].code);
-    const [currentWordIndex, setCurrentWordIndex] = useState(0);
-    const [currentWord, setCurrentWord] = useState<WordType>({
-        id: null,
-        targetWord: "",
-        imageUrl: "",
-        languageCode: "",
-    });
-    const [recordedFilePath, setRecordedFilePath] = useState<string>("");
     const [isRecording, setIsRecording] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [evaluationResult, setEvaluationResult] = useState<ResultType>({
+
+    const [result, setResult] = useState<ResultType>({
         transcribedText: "",
         score: 0,
         targetWord: "",
         imageUrl: "",
     });
-    const [statusMessage, setStatusMessage] = useState("녹음 버튼을 눌러 시작하세요.");
 
-    const filteredWordList = useMemo(
-        () => wordList.filter((w) => w.languageCode === selectedLanguage),
-        [wordList, selectedLanguage]
-    );
+    // ⭐️ currentWord가 null일 경우를 대비하여 안전하게 접근
+    const targetWord = currentWord?.targetWord;
+    const languageCode = currentWord?.languageCode;
+    const isWordOrSentence = type === 'word' || type === 'sentence'; // 단어/문장 학습 여부
 
+    /* ---------------- 초기화 및 정리 ---------------- */
     useEffect(() => {
-        fetchWordList();
-
-        audioRecorderPlayerRef.current = new AudioRecorderPlayer();
-
+        recorderRef.current = new AudioRecorderPlayer();
         return () => {
-            audioRecorderPlayerRef.current?.stopRecorder();
-            audioRecorderPlayerRef.current?.removeRecordBackListener();
+            recorderRef.current?.stopRecorder();
+            recorderRef.current?.removeRecordBackListener();
         };
     }, []);
 
+    // 🌟 currentWord가 바뀌면 평가 결과 초기화
     useEffect(() => {
-        if (filteredWordList.length === 0) return;
-
-        setCurrentWord(filteredWordList[currentWordIndex]);
-        setEvaluationResult({
+        setResult({
             transcribedText: "",
             score: 0,
             targetWord: "",
             imageUrl: "",
         });
-        setStatusMessage(`"${filteredWordList[currentWordIndex].targetWord}" 발음하기`);
-    }, [filteredWordList, currentWordIndex]);
+    }, [currentWord]);
 
-    // 🔹 정상 복구된 fetchWordList (GET 요청)
-    const fetchWordList = async () => {
-        try {
-            const res = await axios.get(`${BASE_URL}/api/${type}s`);
-            console.log("백엔드 응답:", res.data);
 
-            const mapped = res.data.map((item: any) => {
-                if (typeof item === "string") {
-                    return {
-                        id: null,
-                        targetWord: item,
-                        imageUrl: "",
-                        languageCode: "ko",
-                    };
-                } else {
-                    return {
-                        id: item.id ?? null,
-                        targetWord: item.text ?? "",
-                        imageUrl: item.imageUrl ?? "",
-                        languageCode: item.language ?? "ko",
-                    };
-                }
-            });
-
-            setWordList(mapped);
-        } catch (e) {
-            console.error("단어 목록 불러오기 실패:", e);
-            Alert.alert("에러", "단어 목록을 불러오지 못했습니다.");
-        }
-    };
-
-    const requestRecordingPermission = async () => {
+    /* ---------------- 권한 ---------------- */
+    // (권한 요청 로직은 그대로 유지)
+    const requestPermission = async () => {
         if (Platform.OS === "android") {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-                );
-                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                    Alert.alert("권한 필요", "녹음 권한이 필요합니다.");
-                    return false;
-                }
-            } catch (err) {
-                console.warn(err);
-                return false;
-            }
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
         }
         return true;
     };
 
+    /* ---------------- 녹음 ---------------- */
     const startRecording = async () => {
-        const hasPermission = await requestRecordingPermission();
-        if (!hasPermission) return;
+        // ⭐️ 단어/문장 학습이면서 targetWord가 없으면 녹음 방지
+        if (isWordOrSentence && !targetWord) return;
 
+        if (!(await requestPermission())) {
+            Alert.alert("권한 필요", "녹음 권한이 필요합니다.");
+            return;
+        }
+        // ... (오디오 설정 및 녹음 시작 로직 유지)
+        const audioSet: AudioSet = {
+            AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+            AudioSourceAndroid: AudioSourceAndroidType.MIC,
+            OutputFormatAndroid: OutputFormatAndroidType.MPEG_4,
+            AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+            AVSampleRateKeyIOS: 44100,
+            AVNumberOfChannelsKeyIOS: 1,
+        };
+
+        const path = `${RNFS.CachesDirectoryPath}/record.m4a`;
         try {
-            const audioSet: AudioSet = {
-                AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
-                AudioSourceAndroid: AudioSourceAndroidType.MIC,
-                AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
-                AVNumberOfChannelsKeyIOS: 2,
-                AVSampleRateKeyIOS: 44100,
-                OutputFormatAndroid: OutputFormatAndroidType.MPEG_4,
-            };
-
-            const path = Platform.select({
-                ios: `${RNFS.CachesDirectoryPath}/hello.m4a`,
-                android: `${RNFS.CachesDirectoryPath}/hello.m4a`,
-            });
-
-            const uri = await audioRecorderPlayerRef.current.startRecorder(path!, audioSet);
-
-            audioRecorderPlayerRef.current.addRecordBackListener((e: any) => {
-                console.log("Record Time:", e.currentPosition);
-            });
-
+            await recorderRef.current?.startRecorder(path, audioSet);
             setIsRecording(true);
-            setStatusMessage("🔴 녹음 중...");
-            setRecordedFilePath(uri);
         } catch (e) {
             console.error("녹음 시작 오류:", e);
             Alert.alert("녹음 오류", "녹음 시작 실패");
@@ -183,143 +133,194 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type }) => {
     };
 
     const stopRecording = async () => {
+        // ... (녹음 중지 로직 유지)
         try {
-            const filePath = await audioRecorderPlayerRef.current.stopRecorder();
-            audioRecorderPlayerRef.current.removeRecordBackListener();
-
+            const path = await recorderRef.current?.stopRecorder();
+            recorderRef.current?.removeRecordBackListener();
             setIsRecording(false);
-            setRecordedFilePath(filePath);
-            setStatusMessage("녹음 완료! 평가 요청 중...");
-            uploadRecording(filePath);
+            if (path) {
+                uploadRecording(path);
+            }
         } catch (e) {
+            console.error("녹음 중지 오류:", e);
             Alert.alert("녹음 오류", "녹음 중지 실패");
         }
     };
 
-    const uploadRecording = async (filePath: string) => {
-        if (!currentWord.targetWord) return;
+    /* ---------------- 업로드 및 평가 ---------------- */
+    const uploadRecording = async (path: string) => {
+        // ⭐️ targetWord가 없으면 평가를 진행하지 않습니다.
+        if (!targetWord || !languageCode) {
+            Alert.alert("오류", `${typeLabels[type]} 학습에 필요한 데이터가 없습니다.`);
+            return;
+        }
 
         setIsLoading(true);
         try {
-            // 1. fileUri 변수 생성 로직 제거/수정 (filePath를 그대로 사용)
-            // 2. name과 type을 플랫폼에 맞게 동적으로 설정
-
             const formData = new FormData();
             formData.append("audio", {
-                uri: filePath, // 녹음기가 반환한 경로 그대로 사용
-                name: Platform.OS === "ios" ? "recording.m4a" : "recording.mp4",
-                type: Platform.OS === "ios" ? "audio/m4a" : "audio/mp4",
-            });
-            formData.append("word", currentWord.targetWord);
+                uri: path,
+                name: "recording.m4a",
+                type: "audio/m4a",
+            } as any);
 
-            // Axios 헤더를 명시적으로 설정하여 확실하게 전송
-            const res = await axios.post(`${BASE_URL}/api/evaluate-speech`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            // ⭐️ 안전하게 targetWord와 languageCode 사용
+            formData.append("word", targetWord);
+            formData.append("languageCode", languageCode);
 
-            const data: ResultType = res.data;
-            setEvaluationResult(data);
-            setStatusMessage(`평가 완료! 점수: ${data.score}`);
+            const res = await axios.post(
+                `${BASE_URL}/api/evaluate-speech`,
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
 
-            if (data.score < 80) Alert.alert("아쉽습니다", `${data.score}점입니다.`);
+            setResult(res.data);
+            if (res.data.score < 80) {
+                Alert.alert("아쉽습니다", `${res.data.score}점입니다. 다시 시도해 보세요.`);
+            } else {
+                Alert.alert("합격!", `${res.data.score}점! 다음 ${typeLabels[type]}로 이동할 수 있습니다.`);
+            }
+
         } catch (e) {
             console.error("평가 요청 실패:", e);
-            // 서버 콘솔에 로그가 찍히는지 확인
-            Alert.alert("오류", "평가 요청 실패. 서버 상태를 확인하세요.");
+            Alert.alert("오류", "평가 실패. 서버 상태를 확인하세요.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    const goNext = () => {
-        if (evaluationResult.score < 80) {
-            Alert.alert("다시 시도", "80점 이상 받아야 넘어갈 수 있어요.");
+    /* ---------------- 다음 단어 로직 ---------------- */
+    const handleGoNext = () => {
+        if (result.score < 80) {
+            Alert.alert("다시 시도", "80점 이상 받아야 다음 단계로 이동할 수 있습니다.");
             return;
         }
-        if (currentWordIndex >= filteredWordList.length - 1) {
-            Alert.alert("완료", "모든 단어를 평가했습니다!");
-            return;
-        }
-        setCurrentWordIndex((prev) => prev + 1);
+        // ⭐️ onNext 함수가 있을 경우에만 호출합니다.
+        onNext?.();
     };
 
-    const displayedImage = evaluationResult.imageUrl || currentWord.imageUrl;
-    const canGoNext = evaluationResult.score >= 80;
+    // ⭐️ currentWord가 null일 수 있으므로 ?. 사용
+    const displayedImageUrl = result.imageUrl || currentWord?.imageUrl;
+    const isReadyToNext = result.score >= 80;
+
 
     return (
-        <View style={{ flex: 1, alignItems: "center", paddingTop: 40 }}>
-            <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 20 }}>
-                Speaking Practice — {type}
+        <View style={styles.mainContainer}>
+            {/* ⭐️ targetWord가 없으면 type에 맞는 안내 텍스트 표시 */}
+            <Text style={styles.targetText}>
+                {targetWord ?? `[${typeLabels[type]} 데이터 준비 중]`}
             </Text>
 
-            <Text style={{ fontSize: 18, marginBottom: 10 }}>{statusMessage}</Text>
-
-            {displayedImage && (
+            {/* ⭐️ 이미지는 단어/문장 학습일 경우에만 표시 (또는 다른 타입에 맞는 이미지 처리 추가) */}
+            {isWordOrSentence && displayedImageUrl && (
                 <Image
-                    source={{ uri: displayedImage }}
-                    style={{ width: 200, height: 200, borderRadius: 12, marginBottom: 20 }}
+                    source={{ uri: `${BASE_URL}${displayedImageUrl}` }}
+                    style={styles.imageStyle}
+                    resizeMode="cover"
                 />
             )}
 
-            <Text style={{ fontSize: 28, fontWeight: "600", marginBottom: 20 }}>
-                {currentWord.targetWord}
-            </Text>
-
+            {/* 녹음 버튼 */}
             {!isRecording ? (
                 <TouchableOpacity
                     onPress={startRecording}
-                    disabled={isLoading}
-                    style={{
-                        padding: 16,
-                        backgroundColor: isLoading ? "#9ca3af" : "#2563eb",
-                        borderRadius: 12,
-                        marginBottom: 16,
-                    }}
+                    // ⭐️ 단어/문장 학습일 경우 targetWord가 없으면 비활성화
+                    disabled={isLoading || (isWordOrSentence && !targetWord)}
+                    style={[styles.buttonBase, {
+                        backgroundColor: (isLoading || (isWordOrSentence && !targetWord)) ? "#9ca3af" : "#2563eb",
+                    }]}
                 >
-                    <Text style={{ color: "white", fontSize: 18 }}>🎙️ 녹음 시작</Text>
+                    <Text style={styles.buttonText}>🎙 녹음 시작</Text>
                 </TouchableOpacity>
             ) : (
                 <TouchableOpacity
                     onPress={stopRecording}
-                    style={{
-                        padding: 16,
-                        backgroundColor: "#dc2626",
-                        borderRadius: 12,
-                        marginBottom: 16,
-                    }}
+                    disabled={isLoading}
+                    style={[styles.buttonBase, { backgroundColor: "#dc2626" }]}
                 >
-                    <Text style={{ color: "white", fontSize: 18 }}>⏹️ 녹음 중지</Text>
+                    <Text style={styles.buttonText}>⏹ 녹음 중지</Text>
                 </TouchableOpacity>
             )}
 
-            {isLoading && <ActivityIndicator size="large" style={{ marginBottom: 20 }} />}
+            {isLoading && <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 20 }} />}
 
-            {evaluationResult.score > 0 && (
-                <View style={{ alignItems: "center", marginTop: 20 }}>
-                    <Text style={{ fontSize: 20, marginBottom: 10 }}>
-                        점수: {evaluationResult.score}점
-                    </Text>
-                    <Text style={{ fontSize: 16 }}>
-                        인식된 텍스트: {evaluationResult.transcribedText}
-                    </Text>
+            {result.score > 0 && (
+                <View style={styles.resultBox}>
+                    <Text style={styles.resultScore}>점수: {result.score}점</Text>
+                    <Text style={styles.resultTranscribed}>인식된 텍스트: {result.transcribedText}</Text>
                 </View>
             )}
 
-            <TouchableOpacity
-                disabled={!canGoNext || isLoading}
-                onPress={goNext}
-                style={{
-                    opacity: !canGoNext || isLoading ? 0.5 : 1,
-                    marginTop: 30,
-                    padding: 14,
-                    backgroundColor: "#16a34a",
-                    borderRadius: 12,
-                }}
-            >
-                <Text style={{ color: "white", fontSize: 18 }}>다음 단어 ➡️</Text>
-            </TouchableOpacity>
+            {/* onNext가 props로 전달되었을 때만 다음 버튼 표시 */}
+            {onNext && (
+                <TouchableOpacity
+                    onPress={handleGoNext}
+                    disabled={!isReadyToNext || isLoading || isRecording}
+                    style={[styles.buttonBase, styles.nextButton, {
+                        backgroundColor: isReadyToNext ? "#16a34a" : "#9ca3af",
+                        opacity: isLoading || isRecording ? 0.5 : 1,
+                    }]}
+                >
+                    <Text style={styles.buttonText}>다음 {typeLabels[type]} ➡️</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
+
+// ⭐️ 스타일 정의
+const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+        alignItems: "center",
+        paddingTop: 10,
+        width: '100%'
+    },
+    targetText: {
+        fontSize: 28,
+        fontWeight: '700',
+        marginBottom: 20
+    },
+    imageStyle: {
+        width: 200,
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 20,
+        backgroundColor: '#f3f4f6'
+    },
+    buttonBase: {
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '80%',
+        maxWidth: 300,
+        marginVertical: 10,
+    },
+    buttonText: {
+        color: "white",
+        fontSize: 18
+    },
+    resultBox: {
+        marginTop: 20,
+        alignItems: "center",
+        padding: 15,
+        backgroundColor: '#f9fafb',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    resultScore: {
+        fontSize: 22,
+        fontWeight: 'bold'
+    },
+    resultTranscribed: {
+        marginTop: 5,
+        fontSize: 16
+    },
+    nextButton: {
+        marginTop: 30,
+    }
+});
 
 export default SpeakingEvaluator;

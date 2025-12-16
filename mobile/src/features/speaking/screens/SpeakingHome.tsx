@@ -1,99 +1,173 @@
-// SpeakingHome.tsx
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import ConsonantVowelScene from './ConsonantVowelScene';
-import SyllableScene from './SyllableScene';
-import WordScene from './WordScene';
-import SentenceScene from './SentenceScene';
-import { LearningUnit } from './Types';
+// SpeakingHome.tsx (최종 수정)
 
-const LEARNING_UNITS: { key: LearningUnit; label: string; scope: string }[] = [
-    { key: 'consonant_vowel', label: '자음/모음', scope: '한글만' },
-    { key: 'syllable', label: '음절 (가/나/다)', scope: '한글만' },
-    { key: 'word', label: '단어', scope: '다국어' },
-    { key: 'sentence', label: '문장', scope: '다국어' },
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+// ⚠️ SpeakingStackParamList 타입을 참조해야 합니다. (경로 확인 필수)
+import { SpeakingStackParamList } from '/Users/m1/Desktop/Dadam/mobile/src/navigation/SpeakingStack.tsx';
+
+type LearningUnit = 'consonant_vowel' | 'syllable' | 'word' | 'sentence';
+type BearImageKey = keyof typeof IMAGE_SOURCES;
+
+// 🔑 Navigation Prop 타입 정의
+type SpeakingHomeNavigationProp = NativeStackNavigationProp<
+    SpeakingStackParamList,
+    'SpeakingHome'
+>;
+
+const HEADER_IMAGE_SOURCE = require('../images/header.png');
+const IMAGE_SOURCES = {
+    consonant_vowel: require('../images/bear1.png'),
+    syllable: require('../images/bear2.png'),
+    word: require('../images/bear3.png'),
+    sentence: require('../images/bear4.png'),
+};
+
+const LEARNING_UNITS: { key: LearningUnit; label: string; scope: string; bearColor: string; imageKey: BearImageKey }[] = [
+    { key: 'consonant_vowel', label: '자음/모음', scope: '자음/모음', bearColor: '#fff8e3', imageKey: 'consonant_vowel' },
+    { key: 'syllable', label: '음절(가나다)', scope: '음절(가나다)', bearColor: '#fff0cc', imageKey: 'syllable' },
+    { key: 'word', label: '단어', scope: '단어', bearColor: '#ffe9b3', imageKey: 'word' },
+    { key: 'sentence', label: '문장', scope: '문장', bearColor: '#ffda7f', imageKey: 'sentence' },
 ];
 
 export default function SpeakingHome() {
-    const [selectedUnit, setSelectedUnit] = useState<LearningUnit | null>(null);
+    const navigation = useNavigation<SpeakingHomeNavigationProp>();
 
-    // 씬 렌더링
-    switch (selectedUnit) {
-        case 'consonant_vowel':
-            return <ConsonantVowelScene onBack={() => setSelectedUnit(null)} />;
-        case 'syllable':
-            return <SyllableScene onBack={() => setSelectedUnit(null)} />;
-        case 'word':
-            return <WordScene onBack={() => setSelectedUnit(null)} />;
-        case 'sentence':
-            return <SentenceScene onBack={() => setSelectedUnit(null)} />;
-    }
+    // ⭐️ handleUnitSelect 함수 수정: 조건부 네비게이션 적용
+    const handleUnitSelect = (unitKey: LearningUnit) => {
+
+        // 1. 다국어 선택이 필요한 경우 (단어, 문장)
+        if (unitKey === 'word' || unitKey === 'sentence') {
+            // LanguageSelectionScreen으로 이동하며, 선택된 unitType을 전달합니다.
+            navigation.navigate('LanguageSelection', { unitType: unitKey });
+        }
+
+        // 2. 한국어만 필요한 경우 (자음/모음, 음절) -> 바로 해당 학습 씬으로 이동
+        else if (unitKey === 'consonant_vowel') {
+            // ConsonantVowelScene으로 바로 이동하며, 한국어('ko')를 전달합니다.
+            // ⚠️ SpeakingStack에 ConsonantVowelScene이 등록되어 있어야 합니다.
+            navigation.navigate('ConsonantVowelScene', { initialLanguage: 'ko' });
+        }
+
+        else if (unitKey === 'syllable') {
+            // SyllableScene으로 바로 이동하며, 한국어('ko')를 전달합니다.
+            // ⚠️ SpeakingStack에 SyllableScene이 등록되어 있어야 합니다.
+            navigation.navigate('SyllableScene', { initialLanguage: 'ko' });
+        }
+    };
+
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.header}>🗣️ 학습 유형 선택</Text>
-            <Text style={styles.subHeader}>원하는 발음 학습 단위를 선택하세요.</Text>
+            <View style={styles.headerContainer}>
+                <Image
+                    source={HEADER_IMAGE_SOURCE}
+                    style={styles.headerImage}
+                    resizeMode="contain"
+                />
+            </View>
 
             <View style={styles.unitContainer}>
                 {LEARNING_UNITS.map((unit) => (
                     <TouchableOpacity
                         key={unit.key}
                         style={styles.unitButton}
-                        onPress={() => setSelectedUnit(unit.key)}
+                        onPress={() => handleUnitSelect(unit.key)}
                     >
-                        <Text style={styles.unitLabel}>{unit.label}</Text>
-                        <Text style={styles.unitScope}>{unit.scope}</Text>
+                        <View style={[styles.unitContent, { backgroundColor: unit.bearColor }]}>
+                            <Image
+                                source={IMAGE_SOURCES[unit.imageKey]}
+                                style={styles.bearImage}
+                                resizeMode="contain"
+                            />
+                            <View style={styles.labelWrapper}>
+                                <Text style={styles.unitLabel}>{unit.label}</Text>
+                            </View>
+                        </View>
                     </TouchableOpacity>
                 ))}
             </View>
+
+            <Text style={styles.bottomInstruction}>
+                아이의 수준에 맞는 단계를 선택해 학습해 보세요.
+            </Text>
         </SafeAreaView>
     );
 }
 
+// 스타일은 변경 없음
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#fffbe6',
         alignItems: 'center',
-        paddingTop: 50,
-        paddingHorizontal: 20,
+        paddingVertical: 20,
     },
-    header: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#1e40af',
-        marginBottom: 8,
+    headerContainer: {
+        alignSelf: 'flex-start',
+        marginLeft: 20,
+        marginBottom: 30,
     },
-    subHeader: {
-        fontSize: 16,
-        color: '#4b5563',
-        marginBottom: 40,
-        textAlign: 'center',
+    headerImage: {
+        width: 150,
+        height: 50,
     },
     unitContainer: {
-        width: '100%',
-        maxWidth: 400,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 10,
+        paddingHorizontal: 10,
+        flexGrow: 1,
+        alignContent: 'center',
     },
     unitButton: {
-        backgroundColor: 'white',
-        padding: 20,
+        width: '48%',
+        maxWidth: 250,
+        margin: 5,
+        alignItems: 'center',
+    },
+    unitContent: {
+        width: '100%',
+        aspectRatio: 1,
         borderRadius: 10,
-        marginBottom: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 4,
-        alignItems: 'center',
+        elevation: 5,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    bearImage: {
+        width: '80%',
+        height: '80%',
+        position: 'absolute',
+        top: 0,
+    },
+    labelWrapper: {
+        position: 'absolute',
+        bottom: '5%',
+        width: '100%',
+        paddingVertical: 5,
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10,
     },
     unitLabel: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#1f2937',
+        fontSize: 25,
+        fontWeight: '900',
+        color: '#3c3c3c',
+        textAlign: 'center',
     },
-    unitScope: {
-        fontSize: 14,
-        color: '#6b7280',
-        marginTop: 5,
+    bottomInstruction: {
+        fontSize: 20,
+        color: '#777',
+        marginTop: 'auto',
+        marginBottom: 20,
+        textAlign: 'center',
     },
 });

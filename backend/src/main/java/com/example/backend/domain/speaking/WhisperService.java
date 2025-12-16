@@ -8,10 +8,8 @@ import java.io.InputStreamReader;
 @Service
 public class WhisperService {
 
-    // ⭐️ Python 실행 파일 경로 (하드코딩)
     private static final String PYTHON_EXECUTABLE = "/opt/anaconda3/envs/dadam/bin/python";
 
-    // ⭐️ Python 스크립트 경로 (하드코딩)
     private static final String WHISPER_SCRIPT_PATH = "/Users/m1/Desktop/Dadam/backend/scripts/whisper_trans.py";
 
     public String transcribeAudio(File audioFile) throws Exception {
@@ -21,11 +19,9 @@ public class WhisperService {
                 WHISPER_SCRIPT_PATH,
                 audioFile.getAbsolutePath()
         );
-        // pb.redirectErrorStream(true); // 에러와 출력을 합치려면 주석 해제
 
         Process process = pb.start();
 
-        // 1. Python 스크립트의 정상 출력(stdout) 읽기
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
         String line;
         StringBuilder output = new StringBuilder();
