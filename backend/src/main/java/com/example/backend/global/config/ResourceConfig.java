@@ -16,9 +16,6 @@ public class ResourceConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 2. 설정이 로드될 때 로그 메시지 출력
         log.info(">>>> Resource Handler Configuration Loaded: Mapping /images/** to classpath:/images/");
-
-        // "/images/**" URL 패턴으로 요청이 들어오면
-        // "classpath:/images/" (즉, src/main/resources/images/) 폴더에서 파일을 찾도록 매핑합니다.
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("classpath:/images/");
     }
