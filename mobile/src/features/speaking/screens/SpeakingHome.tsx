@@ -1,17 +1,12 @@
-// SpeakingHome.tsx (최종 수정)
-
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-// ⚠️ SpeakingStackParamList 타입을 참조해야 합니다. (경로 확인 필수)
 import { SpeakingStackParamList } from '/Users/m1/Desktop/Dadam/mobile/src/navigation/SpeakingStack.tsx';
 
 type LearningUnit = 'consonant_vowel' | 'syllable' | 'word' | 'sentence';
 type BearImageKey = keyof typeof IMAGE_SOURCES;
 
-// 🔑 Navigation Prop 타입 정의
 type SpeakingHomeNavigationProp = NativeStackNavigationProp<
     SpeakingStackParamList,
     'SpeakingHome'
@@ -34,26 +29,19 @@ const LEARNING_UNITS: { key: LearningUnit; label: string; scope: string; bearCol
 
 export default function SpeakingHome() {
     const navigation = useNavigation<SpeakingHomeNavigationProp>();
-
-    // ⭐️ handleUnitSelect 함수 수정: 조건부 네비게이션 적용
     const handleUnitSelect = (unitKey: LearningUnit) => {
 
         // 1. 다국어 선택이 필요한 경우 (단어, 문장)
         if (unitKey === 'word' || unitKey === 'sentence') {
-            // LanguageSelectionScreen으로 이동하며, 선택된 unitType을 전달합니다.
             navigation.navigate('LanguageSelection', { unitType: unitKey });
         }
 
-        // 2. 한국어만 필요한 경우 (자음/모음, 음절) -> 바로 해당 학습 씬으로 이동
+        // 2. 한국어만 필요한 경우 (자음/모음, 음절)
         else if (unitKey === 'consonant_vowel') {
-            // ConsonantVowelScene으로 바로 이동하며, 한국어('ko')를 전달합니다.
-            // ⚠️ SpeakingStack에 ConsonantVowelScene이 등록되어 있어야 합니다.
             navigation.navigate('ConsonantVowelScene', { initialLanguage: 'ko' });
         }
 
         else if (unitKey === 'syllable') {
-            // SyllableScene으로 바로 이동하며, 한국어('ko')를 전달합니다.
-            // ⚠️ SpeakingStack에 SyllableScene이 등록되어 있어야 합니다.
             navigation.navigate('SyllableScene', { initialLanguage: 'ko' });
         }
     };
@@ -97,7 +85,6 @@ export default function SpeakingHome() {
     );
 }
 
-// 스타일은 변경 없음
 const styles = StyleSheet.create({
     container: {
         flex: 1,
