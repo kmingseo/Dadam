@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SpeakingHome from '../features/speaking/screens/SpeakingHome';
 import LanguageSelectionScreen from '../features/speaking/screens/LanguageSelectionScreen';
 import WordScene from '../features/speaking/screens/WordScene';
-// ⭐️ 누락된 컴포넌트 Import (경로를 확인하세요)
 import ConsonantVowelScene from '../features/speaking/screens/ConsonantVowelScene';
 import SyllableScene from '../features/speaking/screens/SyllableScene';
 import SentenceScene from '../features/speaking/screens/SentenceScene';
@@ -45,7 +44,6 @@ export default function SpeakingStack() {
                 component={WordScene}
             />
 
-            {/* ⭐️ 누락된 스크린 등록 */}
             <Stack.Screen
                 name="ConsonantVowelScene"
                 component={ConsonantVowelScene}
