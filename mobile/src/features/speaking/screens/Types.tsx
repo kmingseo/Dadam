@@ -18,16 +18,16 @@ export const LANGUAGES: LanguageType[] = [
 
 export interface WordType {
     id: number | null;
-    text: string;           // '사과', 'apple' 등 실제 단어/문자
-    imagePath: string;      // '/images/apple.jpg' 등 이미지 서버 경로
-    languageCode: LanguageCode; // 'ko', 'ja' 등
+    text: string;           
+    imagePath: string;      
+    languageCode: LanguageCode; 
 }
 
 
 export interface ResultType {
     transcribedText: string;
     score: number;
-    targetWord: string; // 평가 대상 단어/문장
+    targetWord: string; 
     imageUrl: string;
 }
 
@@ -35,10 +35,9 @@ export const initialWord: WordType = {
     id: null,
     text: '',
     imagePath: '',
-    languageCode: 'ko' // 기본 언어는 한국어로 설정
+    languageCode: 'ko' 
 };
 
-/** ResultType의 초기 상태 값 */
 export const initialResult: ResultType = {
     transcribedText: '',
     score: 0,
