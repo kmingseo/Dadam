@@ -1,5 +1,3 @@
-// WordScene.tsx (최종 수정 - 다국어 데이터 완성)
-
 import React, { useEffect, useState, useMemo } from 'react';
 import {
     View,
@@ -16,11 +14,9 @@ import axios from 'axios';
 import SpeakingEvaluator, { WordType } from './SpeakingEvaluator';
 import { SpeakingStackParamList } from '/Users/m1/Desktop/Dadam/mobile/src/navigation/SpeakingStack.tsx';
 
-// ⚠️ 서버 설정
 const BASE_URL = 'http://10.0.2.2:8080';
-const WORDS_API_URL = `${BASE_URL}/api/words`; // 백엔드에서 getAllWords()에 매핑될 엔드포인트 가정
+const WORDS_API_URL = `${BASE_URL}/api/words`; 
 
-// ⭐️ ⭐️ ⭐️ LANGUAGES 배열 완성 ⭐️ ⭐️ ⭐️
 const LANGUAGES = [
     { code: 'ko', name: '한국어' },
     { code: 'en', name: '영어' },
@@ -29,7 +25,6 @@ const LANGUAGES = [
     { code: 'vi', name: '베트남어' },
 ];
 
-// ⭐️ ⭐️ ⭐️ MOCK_WORDS 배열 완성 (DataService.java 기반) ⭐️ ⭐️ ⭐️
 const IMAGE_BASE_PATH = '/images';
 const MOCK_WORDS: WordType[] = [
     // 사과 (Apple)
@@ -68,7 +63,6 @@ const MOCK_WORDS: WordType[] = [
     { id: 54, targetWord: 'sách', imageUrl: IMAGE_BASE_PATH + "/book.png", languageCode: 'vi' }
 ];
 
-// 🔑 navigation / route 타입
 type Props = NativeStackScreenProps<
     SpeakingStackParamList,
     'WordScene' // WordScene 스크린 이름
@@ -81,11 +75,9 @@ export default function WordScene({ route, navigation }: Props) {
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    // 서버에서 단어 데이터 불러오기
     useEffect(() => {
         const fetchWords = async () => {
             try {
-                // ⚠️ API 호출 시, 서버의 실제 Word DTO 필드 이름(id, targetWord, imageUrl, languageCode)과 일치하도록 확인 필요
                 const response = await axios.get<any[]>(WORDS_API_URL);
 
                 const processedWords: WordType[] = response.data
@@ -97,7 +89,6 @@ export default function WordScene({ route, navigation }: Props) {
                     }))
                     .filter(w => w.targetWord.trim() !== '');
 
-                // ⭐️ 서버 데이터가 있으면 사용, 없으면 전체 MOCK 데이터 사용
                 setAllWords(processedWords.length > 0 ? processedWords : MOCK_WORDS);
 
                 if (processedWords.length === 0) {
@@ -105,7 +96,6 @@ export default function WordScene({ route, navigation }: Props) {
                 }
             } catch (error) {
                 console.error('단어 데이터 불러오기 실패:', error);
-                // ⭐️ 오류 발생 시 전체 MOCK 데이터로 대체
                 setAllWords(MOCK_WORDS);
                 Alert.alert(
                     '경고',
@@ -119,15 +109,12 @@ export default function WordScene({ route, navigation }: Props) {
         fetchWords();
     }, []);
 
-    // 언어 필터링
     const filteredWords = useMemo(() => {
-        // allWords (서버 데이터 또는 MOCK 데이터)를 initialLanguage로 필터링
         return allWords.filter(word => word.languageCode === initialLanguage);
     }, [allWords, initialLanguage]);
 
     const currentWordData = filteredWords[currentIndex] ?? null;
 
-    // 다음 단어
     const handleNextWord = () => {
         if (currentIndex < filteredWords.length - 1) {
             setCurrentIndex(prev => prev + 1);
@@ -145,7 +132,6 @@ export default function WordScene({ route, navigation }: Props) {
         }
     };
 
-    // 로딩 상태 처리
     if (isLoadingData) {
         return (
             <View style={[styles.container, { backgroundColor: '#FFFACD' }]}>
@@ -155,7 +141,6 @@ export default function WordScene({ route, navigation }: Props) {
         );
     }
 
-    // 단어 없음 상태 처리: currentWordData가 null이면 SpeakingEvaluator를 렌더링하지 않습니다.
     if (!currentWordData) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: '#FFFACD' }]}>
@@ -175,7 +160,6 @@ export default function WordScene({ route, navigation }: Props) {
         LANGUAGES.find(l => l.code === initialLanguage)?.name ??
         initialLanguage.toUpperCase();
 
-    // 메인 렌더링
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: '#FFFACD' }]}>
             <View style={styles.header}>
@@ -196,7 +180,6 @@ export default function WordScene({ route, navigation }: Props) {
     );
 }
 
-// 스타일 유지
 const styles = StyleSheet.create({
     container: {
         flex: 1,
