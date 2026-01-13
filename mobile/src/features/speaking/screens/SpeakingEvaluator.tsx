@@ -8,7 +8,7 @@ import {
     Alert,
     Platform,
     PermissionsAndroid,
-    StyleSheet, // 스타일링을 위해 추가
+    StyleSheet, 
 } from "react-native";
 import axios from "axios";
 import AudioRecorderPlayer, {
@@ -20,7 +20,6 @@ import AudioRecorderPlayer, {
 } from "react-native-audio-recorder-player";
 import RNFS from "react-native-fs";
 
-// WordScene에서 사용하므로 export 유지
 export interface WordType {
     id: number | null;
     targetWord: string;
@@ -37,7 +36,6 @@ export interface ResultType {
 
 interface SpeakingEvaluatorProps {
     type: "consonant" | "vowel" | "syllable" | "word" | "sentence";
-    // ⭐️ currentWord와 onNext를 선택적 props로 변경 (? 추가)
     currentWord?: WordType;
     onNext?: () => void;
 }
@@ -65,12 +63,10 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
         imageUrl: "",
     });
 
-    // ⭐️ currentWord가 null일 경우를 대비하여 안전하게 접근
     const targetWord = currentWord?.targetWord;
     const languageCode = currentWord?.languageCode;
-    const isWordOrSentence = type === 'word' || type === 'sentence'; // 단어/문장 학습 여부
+    const isWordOrSentence = type === 'word' || type === 'sentence'; 
 
-    /* ---------------- 초기화 및 정리 ---------------- */
     useEffect(() => {
         recorderRef.current = new AudioRecorderPlayer();
         return () => {
@@ -79,7 +75,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
         };
     }, []);
 
-    // 🌟 currentWord가 바뀌면 평가 결과 초기화
     useEffect(() => {
         setResult({
             transcribedText: "",
@@ -89,9 +84,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
         });
     }, [currentWord]);
 
-
-    /* ---------------- 권한 ---------------- */
-    // (권한 요청 로직은 그대로 유지)
     const requestPermission = async () => {
         if (Platform.OS === "android") {
             const granted = await PermissionsAndroid.request(
@@ -102,16 +94,13 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
         return true;
     };
 
-    /* ---------------- 녹음 ---------------- */
     const startRecording = async () => {
-        // ⭐️ 단어/문장 학습이면서 targetWord가 없으면 녹음 방지
         if (isWordOrSentence && !targetWord) return;
 
         if (!(await requestPermission())) {
             Alert.alert("권한 필요", "녹음 권한이 필요합니다.");
             return;
         }
-        // ... (오디오 설정 및 녹음 시작 로직 유지)
         const audioSet: AudioSet = {
             AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
             AudioSourceAndroid: AudioSourceAndroidType.MIC,
@@ -133,7 +122,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
     };
 
     const stopRecording = async () => {
-        // ... (녹음 중지 로직 유지)
         try {
             const path = await recorderRef.current?.stopRecorder();
             recorderRef.current?.removeRecordBackListener();
@@ -147,9 +135,7 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
         }
     };
 
-    /* ---------------- 업로드 및 평가 ---------------- */
     const uploadRecording = async (path: string) => {
-        // ⭐️ targetWord가 없으면 평가를 진행하지 않습니다.
         if (!targetWord || !languageCode) {
             Alert.alert("오류", `${typeLabels[type]} 학습에 필요한 데이터가 없습니다.`);
             return;
@@ -164,7 +150,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
                 type: "audio/m4a",
             } as any);
 
-            // ⭐️ 안전하게 targetWord와 languageCode 사용
             formData.append("word", targetWord);
             formData.append("languageCode", languageCode);
 
@@ -189,29 +174,23 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
         }
     };
 
-    /* ---------------- 다음 단어 로직 ---------------- */
     const handleGoNext = () => {
         if (result.score < 80) {
             Alert.alert("다시 시도", "80점 이상 받아야 다음 단계로 이동할 수 있습니다.");
             return;
         }
-        // ⭐️ onNext 함수가 있을 경우에만 호출합니다.
         onNext?.();
     };
 
-    // ⭐️ currentWord가 null일 수 있으므로 ?. 사용
     const displayedImageUrl = result.imageUrl || currentWord?.imageUrl;
     const isReadyToNext = result.score >= 80;
 
 
     return (
         <View style={styles.mainContainer}>
-            {/* ⭐️ targetWord가 없으면 type에 맞는 안내 텍스트 표시 */}
             <Text style={styles.targetText}>
                 {targetWord ?? `[${typeLabels[type]} 데이터 준비 중]`}
             </Text>
-
-            {/* ⭐️ 이미지는 단어/문장 학습일 경우에만 표시 (또는 다른 타입에 맞는 이미지 처리 추가) */}
             {isWordOrSentence && displayedImageUrl && (
                 <Image
                     source={{ uri: `${BASE_URL}${displayedImageUrl}` }}
@@ -220,11 +199,9 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
                 />
             )}
 
-            {/* 녹음 버튼 */}
             {!isRecording ? (
                 <TouchableOpacity
                     onPress={startRecording}
-                    // ⭐️ 단어/문장 학습일 경우 targetWord가 없으면 비활성화
                     disabled={isLoading || (isWordOrSentence && !targetWord)}
                     style={[styles.buttonBase, {
                         backgroundColor: (isLoading || (isWordOrSentence && !targetWord)) ? "#9ca3af" : "#2563eb",
@@ -251,7 +228,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
                 </View>
             )}
 
-            {/* onNext가 props로 전달되었을 때만 다음 버튼 표시 */}
             {onNext && (
                 <TouchableOpacity
                     onPress={handleGoNext}
@@ -268,7 +244,6 @@ const SpeakingEvaluator: React.FC<SpeakingEvaluatorProps> = ({ type, currentWord
     );
 };
 
-// ⭐️ 스타일 정의
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
