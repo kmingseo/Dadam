@@ -1,4 +1,3 @@
-// navigation/SpeakingStack.tsx (수정된 최종 코드)
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import SpeakingHome from '../features/speaking/screens/SpeakingHome';
